@@ -174,6 +174,20 @@ async function run() {
     assert.equal(new Set(counts).size, 1);
   });
 
+  await step('le code HTML se masque et se réaffiche', async () => {
+    await page.click('#btn-code-toggle');
+    const hidden = await page.evaluate(() => ({
+      visible: !!document.querySelector('#code-view').offsetHeight,
+      label: document.querySelector('#btn-code-toggle').textContent
+    }));
+    assert.deepEqual(hidden, { visible: false, label: '▴ Afficher' });
+    await page.reload();
+    await page.waitForFunction(() => window.BW && BW.state && BW.state.lastGen);
+    assert.equal(await page.evaluate(() => !!document.querySelector('#code-view').offsetHeight), false, 'choix retenu');
+    await page.click('#btn-code-toggle');
+    assert.equal(await page.evaluate(() => document.querySelector('#code-view').offsetHeight > 100), true);
+  });
+
   await step('le zip contient la page et ses images', async () => {
     const size = await page.evaluate(() => BW.makeZip([
       { name: 'index.html', data: new TextEncoder().encode('<p>x</p>') },

@@ -591,6 +591,19 @@
     if (!code) setTimeout(function () { Blockly.svgResize(ws); codeView.refresh(); }, 0);
   }
 
+  // Masquer / afficher le panneau « Code HTML » (mode blocs).
+  function setCodeCollapsed(collapsed) {
+    prefs.codeCollapsed = collapsed;
+    savePrefs();
+    $('#right').classList.toggle('code-collapsed', collapsed);
+    var b = $('#btn-code-toggle');
+    b.textContent = collapsed ? '▴ Afficher' : '▾ Masquer';
+    b.title = collapsed ? 'Afficher le code HTML' : 'Masquer le code HTML';
+    b.setAttribute('aria-expanded', !collapsed);
+    $('#code-hint').textContent = collapsed ? '(masqué)' : 'Il s’écrit tout seul avec tes blocs.';
+    if (!collapsed) setTimeout(function () { codeView.refresh(); highlightCode(state.selectedId); }, 0);
+  }
+
   // Liste des balises proposées par l'autocomplétion du mode code.
   function hintSchema() {
     var g = { class: null, id: null, title: null };
@@ -1070,7 +1083,7 @@
     return '<ol class="steps">' +
       '<li><b>Choisis une catégorie</b> à gauche (Structure, Texte, Listes…) puis <b>glisse un bloc</b> à l’intérieur du bloc « page web ».</li>' +
       '<li><b>Les blocs s’emboîtent comme les balises HTML</b> : un bloc rangé dans un autre, c’est une balise à l’intérieur d’une autre. Si un bloc ne veut pas s’accrocher, c’est qu’il n’a pas le droit d’aller à cet endroit !</li>' +
-      '<li><b>Clique sur un bloc</b> : son code s’éclaire dans le « Code HTML » et il est entouré dans l’aperçu. Ça marche aussi dans l’autre sens : clique dans l’aperçu ou dans le code pour retrouver le bloc.</li>' +
+      '<li><b>Clique sur un bloc</b> : son code s’éclaire dans le « Code HTML » et il est entouré dans l’aperçu. Ça marche aussi dans l’autre sens : clique dans l’aperçu ou dans le code pour retrouver le bloc. Le bouton <b>▾ Masquer</b> cache le code HTML (et <b>▴ Afficher</b> le fait revenir).</li>' +
       '<li><b>Étiquettes</b> : choisis ce qui est écrit sur les blocs. <i>Français</i> pour débuter, <i>Les deux</i> pour apprendre les balises, <i>Balises</i> pour voir les blocs comme du vrai code.</li>' +
       '<li><b>⚠️ Conseils</b> : ils t’aident à construire une page bien organisée. Clique sur un conseil pour trouver le bloc concerné.</li>' +
       '<li>Quand tu te sens prêt·e, clique sur <b>⌨️ Code</b> pour écrire le HTML toi-même. Les conseils te signalent alors les balises mal fermées ou mal rangées. Tu peux revenir aux blocs quand tu veux.</li>' +
@@ -1195,6 +1208,8 @@
       savePrefs();
     });
     if (prefs.adviceOpen) { $('#advice').classList.add('open'); $('#advice-toggle').setAttribute('aria-expanded', true); }
+    $('#btn-code-toggle').addEventListener('click', function () { setCodeCollapsed(!prefs.codeCollapsed); });
+    if (prefs.codeCollapsed) setCodeCollapsed(true);
     $('#advice-list').addEventListener('click', function (e) {
       var btn = e.target.closest('button[data-id]');
       if (btn) selectBlock(btn.dataset.id);

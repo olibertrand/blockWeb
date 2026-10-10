@@ -115,6 +115,12 @@ kbd {
 #preview-panel { flex: 0 0 var(--preview); }
 #code-panel { flex: 1 1 0; }
 body.mode-code #preview-panel { flex: 1 1 auto; }
+/* Code HTML masqué : il ne reste que sa barre de titre, l'aperçu prend la place. */
+.right.code-collapsed #preview-panel { flex: 1 1 auto; }
+.right.code-collapsed #code-panel { flex: 0 0 auto; margin-top: 8px; }
+.right.code-collapsed #code-panel .panel-body,
+.right.code-collapsed #gutter-h { display: none; }
+.right.code-collapsed #code-panel .pane-head { border-bottom: 0; }
 
 .pane-head {
   display: flex; align-items: center; gap: 8px;
