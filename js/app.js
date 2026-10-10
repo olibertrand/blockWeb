@@ -148,7 +148,7 @@
   /* ================================================================== */
 
   function initBlockly() {
-    BW.labelMode = prefs.labelMode || 'both';
+    BW.labelMode = prefs.labelMode || 'fr'; // « Français » par défaut
     ws = Blockly.inject('blockly', {
       toolbox: BW.buildToolbox(),
       theme: BW.theme,

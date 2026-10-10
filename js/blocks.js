@@ -10,7 +10,7 @@
 (function () {
   'use strict';
   var BW = window.BW;
-  BW.labelMode = BW.labelMode || 'both';
+  BW.labelMode = BW.labelMode || 'fr';
 
   function mode() { return BW.labelMode; }
 
