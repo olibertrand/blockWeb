@@ -16,9 +16,10 @@
     tr: 'Une ligne se range dans un tableau (<table>).',
     caption: 'Le titre d’un tableau se range au début du tableau.',
     figcaption: 'Une légende se range dans une illustration (<figure>).',
-    css: 'Une règle de style se range dans « style (CSS) » de la page.',
+    css: 'Une règle de style se range dans le bloc « style » (<style>).',
     cssprop: 'Une propriété se range dans une règle « style pour ».',
-    flow: 'Ce bloc se range dans « contenu visible » ou dans une partie de la page.'
+    head: 'Ce bloc se range dans la partie invisible de la page (<head>).',
+    flow: 'Ce bloc se range dans la partie visible de la page (<body>) ou dans une de ses parties.'
   };
 
   var EMPTY_TEXT_OK = { bw_td: 1, bw_th: 1 };
@@ -77,7 +78,8 @@
           break;
         case 'text':
         case 'textnode':
-          if (!f('TEXT') && !EMPTY_TEXT_OK[b.type]) add(b, 'Ce bloc est vide : écris du texte dedans.');
+          if (b.type === 'bw_title' && !f('TEXT')) add(b, 'Donne un titre à ta page : il s’affiche dans l’onglet du navigateur.');
+          else if (!f('TEXT') && !EMPTY_TEXT_OK[b.type]) add(b, 'Ce bloc est vide : écris du texte dedans.');
           break;
         case 'link':
         case 'linkbox':
@@ -105,7 +107,8 @@
           break;
       }
 
-      if (d.shape === 'container' || d.shape === 'linkbox') {
+      // (Le bloc « style » arrive vide avec la page : ce n'est pas une erreur.)
+      if ((d.shape === 'container' || d.shape === 'linkbox') && b.type !== 'bw_style') {
         if (!kids.length) add(b, 'Ce bloc est vide : glisse d’autres blocs à l’intérieur.');
       }
       if (b.type === 'bw_main' && ++mains > 1) add(b, 'Il ne doit y avoir qu’un seul contenu principal (<main>) par page.');
@@ -130,9 +133,10 @@
     }
 
     if (page) {
-      var title = String(page.getFieldValue('TITLE') || '').trim();
-      if (!title) add(page, 'Donne un titre à ta page : il s’affiche dans l’onglet du navigateur.');
-      if (!page.getInputTargetBlock('BODY')) add(page, 'Ta page est vide : glisse des blocs dans « contenu visible ».');
+      var titles = BW.headBlocks(page).filter(function (b) { return b.type === 'bw_title'; });
+      if (!titles.length) add(page, 'Ajoute le bloc « titre de l’onglet » (<title>) dans la partie invisible de la page : il s’affiche dans l’onglet du navigateur.');
+      titles.slice(1).forEach(function (t) { add(t, 'Il y a déjà un titre de l’onglet : une page n’en a qu’un seul.'); });
+      if (!page.getInputTargetBlock('BODY')) add(page, 'Ta page est vide : glisse des blocs dans la partie visible.');
       visit(page, null, null);
       if (page.getInputTargetBlock('BODY') && headings === 0) add(page, 'Ta page n’a pas encore de titre : ajoute un « titre de niveau 1 » (<h1>).');
     }

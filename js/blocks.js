@@ -84,30 +84,20 @@
 
   var SHAPES = {};
 
+  // La page : une partie invisible (<head>) et une partie visible (<body>).
+  // Le titre de l'onglet et le style sont des blocs à part, rangés dans <head>.
   SHAPES.page = function (b, d) {
     var m = mode();
     var top = b.appendDummyInput('TOP');
-    if (m !== 'tags') top.appendField(label('📄 page web', 'bw-name bw-big'));
+    if (m !== 'tags') top.appendField(label('📄 page web'));
     if (m !== 'fr') top.appendField(tag('<html>'));
-    var t = b.appendDummyInput('TITLE_ROW');
-    if (m === 'tags') t.appendField(tag('<head>   <title>'));
-    else t.appendField(label('titre de l’onglet')).appendField(m === 'both' ? tag('<title>') : label(':'));
-    t.appendField(textInput('Ma page'), 'TITLE');
-    if (m !== 'fr') t.appendField(tag('</title>'));
-    var s = b.appendStatementInput('STYLE');
-    if (m === 'tags') s.appendField(tag('<style>'));
-    else {
-      s.appendField(label('style (CSS)'));
-      if (m === 'both') s.appendField(tag('<style>'));
-    }
-    if (m === 'tags') b.appendDummyInput('STYLE_END').appendField(tag('</style>   </head>'));
-    else if (m === 'both') b.appendDummyInput('STYLE_END').appendField(tag('</style>'));
+    var head = b.appendStatementInput('HEAD');
+    if (m !== 'tags') head.appendField(label('partie invisible'));
+    if (m !== 'fr') head.appendField(tag('<head>'));
+    if (m !== 'fr') b.appendDummyInput('HEAD_END').appendField(tag('</head>'));
     var body = b.appendStatementInput('BODY');
-    if (m === 'tags') body.appendField(tag('<body>'));
-    else {
-      body.appendField(label('contenu visible'));
-      if (m === 'both') body.appendField(tag('<body>'));
-    }
+    if (m !== 'tags') body.appendField(label('partie visible'));
+    if (m !== 'fr') body.appendField(tag('<body>'));
     if (m !== 'fr') b.appendDummyInput('END').appendField(tag('</body>')).appendField(tag('</html>'));
   };
 
@@ -482,7 +472,10 @@
       contents: [
         category('structure', [
           lbl('La page entière (une seule) :'),
-          blk('bw_page', { TITLE: 'Ma page' }),
+          blk('bw_page', null, { HEAD: stack([blk('bw_title', { TEXT: 'Ma page' }), blk('bw_style')]) }),
+          lbl('Dans la partie invisible de la page :'),
+          blk('bw_title', { TEXT: 'Ma page' }),
+          blk('bw_style'),
           lbl('Les grandes parties de la page :'),
           blk('bw_header', null, inside([h(1, 'Mon site')])),
           blk('bw_nav', null, inside([blk('bw_ul', null, inside([liLink('Accueil', 'index.html'), liLink('Vikidia', 'https://fr.vikidia.org')]))])),
@@ -537,7 +530,9 @@
           blk('bw_th'), blk('bw_td')
         ]),
         category('style', [
-          lbl('1. Une règle de style se range dans « style (CSS) » de la page.'),
+          lbl('Le bloc « style » (déjà rangé dans la partie invisible de la page) :'),
+          blk('bw_style'),
+          lbl('1. Une règle de style se range dans le bloc « style » :'),
           blk('bw_css_rule', { SEL: 'h1' }, inside([blk('bw_css_color', { V: 'darkblue' })])),
           blk('bw_css_rule', { SEL: 'body' }),
           lbl('2. Range des propriétés dans la règle :')

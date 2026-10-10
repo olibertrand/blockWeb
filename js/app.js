@@ -670,7 +670,7 @@
   function projectData() {
     return {
       app: 'BlocWeb',
-      version: 1,
+      version: 2,
       savedAt: new Date().toISOString(),
       mode: state.mode,
       workspace: Blockly.serialization.workspaces.save(ws),
@@ -703,7 +703,7 @@
     if (!p || typeof p !== 'object' || !p.workspace) throw new Error('format');
     if (state.mode === 'code') { state.mode = 'blocks'; applyModeUI(); }
     state.images = cleanImages(p.images);
-    loadWorkspace(p.workspace);
+    loadWorkspace(BW.migrateState(p.workspace));
     update.now();
     if (p.mode === 'code') await enterCodeMode(p.code || '', true);
     setTimeout(showPageTop, 0);
@@ -739,8 +739,7 @@
       var m = /<title>([^<]*)<\/title>/i.exec(editor.getValue());
       return m ? m[1] : 'ma-page';
     }
-    var page = BW.findPage(ws);
-    return page ? page.getFieldValue('TITLE') : 'ma-page';
+    return BW.pageTitle(ws) || 'ma-page';
   }
 
   function currentCode() {

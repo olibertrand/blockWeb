@@ -26,7 +26,7 @@ rendre le **passage des blocs au code** le plus progressif possible.
 | | |
 |---|---|
 | 🇫🇷 **Tout en français** | Les blocs, les explications au survol, les conseils et les messages sont en français, avec des mots simples. |
-| 🧩 **Un bloc = une balise** | Les blocs s’emboîtent comme les balises HTML. Ils **refusent de s’accrocher au mauvais endroit** : un élément de liste ne va que dans une liste, une case de tableau que dans une ligne… |
+| 🧩 **Un bloc = une balise** | Les blocs s’emboîtent comme les balises HTML. Le bloc « page web » a une **partie invisible** (`<head>`), qui contient déjà les blocs « titre de l’onglet » (`<title>`) et « style » (`<style>`), et une **partie visible** (`<body>`). Ils **refusent de s’accrocher au mauvais endroit** : un élément de liste ne va que dans une liste, une case de tableau que dans une ligne… |
 | 🏷️ **Trois façons d’afficher les blocs** | Le bouton **Étiquettes** propose trois affichages. *Français* : `paragraphe [Bonjour]`. *Les deux* : `paragraphe <p> [Bonjour] </p>`. *Balises* : `<p> [Bonjour] </p>`, c’est-à-dire le vrai code. On passe ainsi des mots aux balises à son rythme. |
 | 👀 **Aperçu et code en direct, synchronisés** | Quand on clique sur un bloc, son code s’éclaire et l’élément est entouré dans l’aperçu. Dans l’autre sens, un clic dans l’aperçu ou dans le code retrouve le bloc. |
 | ⌨️ **Mode Code réversible** | On écrit le HTML soi-même. L’éditeur propose les balises quand on tape `<` et ferme les balises tout seul. Les erreurs (balise non fermée, mal imbriquée, `li` hors d’une liste…) sont signalées avec leur numéro de ligne. On peut **revenir aux blocs** à tout moment : le code est retransformé en blocs. |
@@ -48,7 +48,7 @@ rendre le **passage des blocs au code** le plus progressif possible.
 
 | Catégorie | Blocs |
 |---|---|
-| 🏗️ Structure | page web (`html`, `head`, `title`, `style`, `body`), en-tête `header`, menu `nav`, contenu principal `main`, `section`, `article`, encadré `aside`, pied de page `footer`, boîte `div` |
+| 🏗️ Structure | page web `html` avec sa partie invisible `head` et sa partie visible `body` ; dans la partie invisible, titre de l’onglet `title` et style `style` (déjà présents quand on pose la page) ; en-tête `header`, menu `nav`, contenu principal `main`, `section`, `article`, encadré `aside`, pied de page `footer`, boîte `div` |
 | ✏️ Texte | titres `h1` à `h6`, paragraphe `p` (simple ou à composer), texte, important `strong`, accentué `em`, surligné `mark`, retour à la ligne `br`, citation `blockquote`, séparation `hr` |
 | 📋 Listes | liste à puces `ul`, liste numérotée `ol`, élément `li` (simple ou à composer) |
 | 🔗 Liens et images | lien `a`, lien sur une image, image `img` (`src`, `alt`), illustration `figure` et légende `figcaption` |

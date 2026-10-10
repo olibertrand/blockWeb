@@ -91,10 +91,7 @@
       return null;
     }
     if (tag === 'style') { this.css += '\n' + el.textContent; return null; }
-    if (tag === 'link' || tag === 'meta' || tag === 'base' || tag === 'title') {
-      if (tag === 'link') this.warn('Les feuilles de style externes (<link>) ne sont pas prises en charge par les blocs.');
-      return null;
-    }
+    if (tag === 'title') return null;
 
     if (SIMPLE_CONTAINERS[tag] && plainEl) return B(SIMPLE_CONTAINERS[tag], null, this.kids(el));
 
@@ -227,18 +224,60 @@
     opts = opts || {};
     var imp = new Importer();
     var doc = new DOMParser().parseFromString(String(code || ''), 'text/html');
-    var titleEl = doc.querySelector('title');
-    var title = titleEl ? norm(titleEl.textContent).trim() : '';
-    doc.querySelectorAll('head style').forEach(function (s) { imp.css += '\n' + s.textContent; });
-    if (doc.querySelector('head script')) imp.warn('Le code <script> n’est pas pris en charge par les blocs : il a été retiré.');
-    if (doc.querySelector('head link[rel~="stylesheet"]')) imp.warn('Les feuilles de style externes (<link>) ne sont pas prises en charge par les blocs.');
+
+    // Un bloc « style » avec ses règles. Dans les modèles, les règles sont
+    // repliées pour laisser voir le contenu de la page.
+    function styleBlock(css) {
+      var rules = imp.cssBlocks(css);
+      if (opts.collapseCss) rules.forEach(function (r) { r.collapsed = true; });
+      return B('bw_style', null, rules);
+    }
+
+    // La partie invisible (<head>).
+    var head = [];
+    Array.prototype.forEach.call(doc.head.childNodes, function (n) {
+      if (n.nodeType === 8) { head.push(B('bw_comment', { TEXT: n.nodeValue.trim() })); return; }
+      if (n.nodeType !== 1) return;
+      var tag = n.tagName.toLowerCase();
+      if (tag === 'title') head.push(B('bw_title', { TEXT: textOf(n) }));
+      else if (tag === 'style') head.push(styleBlock(n.textContent));
+      else if (tag === 'meta' && n.hasAttribute('charset')) return; // ajoutée automatiquement
+      else if (tag === 'script' || tag === 'noscript' || tag === 'template') {
+        imp.warn('Le code <' + tag + '> n\u2019est pas pris en charge par les blocs : il a été retiré.');
+      } else head.push(imp.generic(n));
+    });
+
+    // La partie visible (<body>). Un <style> écrit dans le body rejoint le <head>.
     var body = imp.kids(doc.body);
-    var rules = imp.cssBlocks(imp.css);
-    // Dans les modèles, les règles de style sont repliées pour laisser voir le contenu.
-    if (opts.collapseCss) rules.forEach(function (r) { r.collapsed = true; });
-    var page = { type: 'bw_page', x: 40, y: 30, fields: { TITLE: title || 'Ma page' }, inputs: {} };
-    if (rules.length) page.inputs.STYLE = chain(rules);
+    if (imp.css.trim()) head.push(styleBlock(imp.css));
+
+    var page = { type: 'bw_page', x: 40, y: 30, inputs: {} };
+    if (head.length) page.inputs.HEAD = chain(head);
     if (body.length) page.inputs.BODY = chain(body);
     return { state: { blocks: { languageVersion: 0, blocks: [page] } }, warnings: imp.warnings };
+  };
+
+  /*
+   * Met à jour un projet enregistré avec une ancienne version de BlocWeb, où le
+   * titre de l'onglet était un champ du bloc « page web » et les règles de
+   * style étaient rangées directement dans la page.
+   */
+  BW.migrateState = function (state) {
+    var blocks = state && state.blocks && state.blocks.blocks;
+    (blocks || []).forEach(function (b) {
+      if (b.type !== 'bw_page') return;
+      var inputs = b.inputs || {};
+      if (!(b.fields && 'TITLE' in b.fields) && !inputs.STYLE) return;
+      var title = { type: 'bw_title', fields: { TEXT: (b.fields && b.fields.TITLE) || 'Ma page' } };
+      var style = { type: 'bw_style' };
+      if (inputs.STYLE) style.inputs = { CONTENT: inputs.STYLE };
+      title.next = { block: style };
+      if (inputs.HEAD) style.next = inputs.HEAD;
+      inputs.HEAD = { block: title };
+      delete inputs.STYLE;
+      if (b.fields) delete b.fields.TITLE;
+      b.inputs = inputs;
+    });
+    return state;
   };
 })();

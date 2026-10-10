@@ -99,9 +99,10 @@
     return s;
   }
 
-  function cssRulesOf(page) {
+  // Les règles CSS rangées dans un bloc « style ».
+  function cssRulesOf(style) {
     var rules = [];
-    var r = page.getInputTargetBlock('STYLE');
+    var r = style.getInputTargetBlock('CONTENT');
     while (r) {
       var d = BW.DEFS[r.type];
       if (r.isEnabled() && d && (d.shape === 'cssrule' || d.shape === 'cssrulefree')) {
@@ -129,6 +130,24 @@
   BW.findPage = function (ws) {
     var pages = ws.getTopBlocks(true).filter(function (b) { return b.type === 'bw_page' && !b.isInsertionMarker(); });
     return pages[0] || null;
+  };
+
+  // Les blocs rangés dans la partie invisible (<head>) de la page.
+  function headBlocks(page) {
+    var out = [];
+    var b = page ? page.getInputTargetBlock('HEAD') : null;
+    while (b) {
+      if (b.isEnabled() && !b.isInsertionMarker()) out.push(b);
+      b = b.getNextBlock();
+    }
+    return out;
+  }
+  BW.headBlocks = headBlocks;
+
+  // Le titre de l'onglet (le texte du premier bloc « titre de l'onglet »).
+  BW.pageTitle = function (ws) {
+    var t = headBlocks(BW.findPage(ws)).filter(function (b) { return b.type === 'bw_title'; })[0];
+    return t ? fieldVal(t, 'TEXT') : '';
   };
 
   /* ---------- Écriture du HTML ---------- */
@@ -256,20 +275,24 @@
       }
     });
 
-    var title = page ? fieldVal(page, 'TITLE') : 'Ma page';
-    var rules = page ? cssRulesOf(page) : [];
     var body = page ? kidsOf(page, 'BODY') : [];
+    var rules = [];
+    var ranges = {};
 
     P.push('<!DOCTYPE html>');
     P.push('<html lang="fr">');
-    P.push('  <head>');
+    var headStart = P.push('  <head>');
     P.push('    <meta charset="utf-8">');
-    var tl = P.push('    <title>' + escText(title) + '</title>');
-    var ranges = {};
-    ranges.title = { from: { line: tl, ch: 4 }, to: { line: tl, ch: P.lines[tl].length } };
-    if (rules.length) {
+    // La partie invisible : titre de l'onglet, style, et éventuellement d'autres balises.
+    headBlocks(page).forEach(function (hb) {
+      if (hb.type !== 'bw_style') {
+        var n = nodeFor(hb);
+        if (n) P.block(n, 2);
+        return;
+      }
       var styleStart = P.push('    <style>');
-      rules.forEach(function (r) {
+      cssRulesOf(hb).forEach(function (r) {
+        rules.push(r);
         var start = P.push('      ' + r.selector + ' {');
         r.props.forEach(function (pr) {
           var s = '        ' + pr.prop + ': ' + pr.value + ';';
@@ -280,9 +303,10 @@
         P.rec(r.id, start, 6, end, 7);
       });
       var styleEnd = P.push('    </style>');
-      ranges.style = { from: { line: styleStart, ch: 4 }, to: { line: styleEnd, ch: 12 } };
-    }
-    P.push('  </head>');
+      P.rec(hb.id, styleStart, 4, styleEnd, 12);
+    });
+    var headEnd = P.push('  </head>');
+    ranges.head = { from: { line: headStart, ch: 2 }, to: { line: headEnd, ch: 9 } };
     var bodyStart = P.push('  <body>');
     body.forEach(function (n) { P.block(n, 2); });
     var bodyEnd = P.push('  </body>');

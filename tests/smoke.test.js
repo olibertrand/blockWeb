@@ -68,6 +68,52 @@ async function run() {
     assert.deepEqual(r, { liInSection: false, pInSection: true, liInUl: true, textInParagraph: true, paragraphAfterTextInParagraph: false });
   });
 
+  await step('titre et style sont des blocs de la partie invisible', async () => {
+    const r = await page.evaluate(() => {
+      const ws = BW.ws;
+      const mk = (t) => { const b = ws.newBlock(t); b.initSvg(); b.render(); return b; };
+      const pg = BW.findPage(ws), title = mk('bw_title'), style = mk('bw_style'), rule = mk('bw_css_rule'), p = mk('bw_p');
+      const can = (a, b) => ws.connectionChecker.canConnect(a, b, false);
+      const out = {
+        titleInHead: can(pg.getInput('HEAD').connection, title.previousConnection),
+        styleInHead: can(pg.getInput('HEAD').connection, style.previousConnection),
+        titleInBody: can(pg.getInput('BODY').connection, title.previousConnection),
+        paragraphInHead: can(pg.getInput('HEAD').connection, p.previousConnection),
+        ruleInStyle: can(style.getInput('CONTENT').connection, rule.previousConnection),
+        ruleInHead: can(pg.getInput('HEAD').connection, rule.previousConnection)
+      };
+      [title, style, rule, p].forEach((b) => b.dispose());
+      const head = BW.headBlocks(pg).map((b) => b.type);
+      return { out, head, code: BW.generate(ws).code };
+    });
+    assert.deepEqual(r.out, { titleInHead: true, styleInHead: true, titleInBody: false, paragraphInHead: false, ruleInStyle: true, ruleInHead: false });
+    assert.deepEqual(r.head, ['bw_title', 'bw_style']);
+    assert.match(r.code, /<head>\n\s+<meta charset="utf-8">\n\s+<title>Recette des crêpes<\/title>\n\s+<style>\n/);
+  });
+
+  await step('le bloc page de la boîte à outils contient un titre et un style', async () => {
+    const r = await page.evaluate(() => {
+      const page = BW.buildToolbox().contents[0].contents.find((c) => c.type === 'bw_page');
+      const first = page.inputs.HEAD.block;
+      return [first.type, first.next.block.type];
+    });
+    assert.deepEqual(r, ['bw_title', 'bw_style']);
+  });
+
+  await step('un projet de l’ancienne version est mis à jour', async () => {
+    const code = await page.evaluate(async () => {
+      const old = { blocks: { languageVersion: 0, blocks: [{ type: 'bw_page', x: 0, y: 0, fields: { TITLE: 'Ancien' }, inputs: {
+        STYLE: { block: { type: 'bw_css_rule', fields: { SEL: 'h1' }, inputs: { CONTENT: { block: { type: 'bw_css_color', fields: { V: 'red' } } } } } },
+        BODY: { block: { type: 'bw_p', fields: { TEXT: 'Salut' } } } } }] } };
+      await BW.app.loadProject({ workspace: old, images: {} });
+      return BW.state.lastGen.code;
+    });
+    assert.match(code, /<title>Ancien<\/title>\n\s+<style>\n\s+h1 \{\n\s+color: red;/);
+    assert.match(code, /<p>Salut<\/p>/);
+    await page.evaluate(async () => { await BW.app.loadTemplate(BW.TEMPLATES.find((t) => t.id === 'recette')); });
+    await page.waitForTimeout(600); // le temps de recharger l'aperçu
+  });
+
   await step('un bloc choisi est surligné dans le code et l’aperçu', async () => {
     const r = await page.evaluate(() => {
       const b = BW.ws.getAllBlocks().find((x) => x.type === 'bw_strong');

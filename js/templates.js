@@ -50,7 +50,7 @@
     {
       id: 'vide', name: 'Page vide', emoji: '📄',
       desc: 'Une page avec juste un titre et un paragraphe.',
-      html: '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Ma page</title></head><body>' +
+      html: '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Ma page</title><style></style></head><body>' +
         '<h1>Mon titre</h1><p>Écris ton texte ici.</p></body></html>'
     },
     {

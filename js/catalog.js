@@ -31,8 +31,8 @@
     { id: 'style', name: 'Style (CSS)', emoji: '🎨', colour: '#0d7680' },
     { id: 'plus', name: 'Plus', emoji: '🧰', colour: '#5f6973' }
   ];
-  // Couleurs secondaires (blocs « page » et « mise en valeur »).
-  BW.EXTRA_COLOURS = { page: '#33415c', inline: '#2a7fa8' };
+  // Couleurs secondaires (blocs « page », « partie invisible » et « mise en valeur »).
+  BW.EXTRA_COLOURS = { page: '#33415c', head: '#8a6a00', inline: '#2a7fa8' };
 
   var D = [];
   function def(o) { D.push(o); return o; }
@@ -41,10 +41,19 @@
   def({
     type: 'bw_page', cat: 'structure', style: 'page', shape: 'page', tag: 'html',
     fr: 'page web', kinds: [],
-    inputs: { STYLE: ['css'], BODY: ['flow'] },
-    tip: 'La page entière. Tout ce qui est rangé dans « contenu visible » s’affiche dans le navigateur.',
-    memo: 'La page entière : <html> contient <head> (les informations : titre de l’onglet, style) et <body> (ce qui s’affiche).'
+    inputs: { HEAD: ['head'], BODY: ['flow'] },
+    tip: 'La page entière. La partie invisible (<head>) donne des informations sur la page ; ' +
+      'tout ce qui est rangé dans la partie visible (<body>) s’affiche dans le navigateur.',
+    memo: 'La page entière : <html> contient <head> (la partie invisible : titre de l’onglet, style) et <body> (la partie visible).'
   });
+
+  /* ---------- La partie invisible (<head>) ---------- */
+  def({ type: 'bw_title', cat: 'structure', style: 'head', shape: 'text', tag: 'title', fr: 'titre de l’onglet',
+    kinds: ['head'], text: 'Ma page',
+    tip: 'Le titre de la page : il s’affiche dans l’onglet du navigateur et dans les favoris. Il se range dans la partie invisible (<head>).' });
+  def({ type: 'bw_style', cat: 'structure', style: 'head', shape: 'container', tag: 'style', fr: 'style (CSS)',
+    kinds: ['head'], inputs: { CONTENT: ['css'] },
+    tip: 'Le style de la page (CSS) : on y range des règles « style pour … » qui décorent la page. Il se range dans la partie invisible (<head>).' });
 
   /* ---------- Structure (balises sémantiques) ---------- */
   var structure = [
@@ -201,11 +210,11 @@
 
   /* ---------- Plus ---------- */
   def({ type: 'bw_generic', cat: 'plus', shape: 'generic', tag: 'span', fr: 'balise',
-    kinds: ANY_HTML, inputs: { CONTENT: ANY_HTML },
+    kinds: ANY_HTML.concat('head'), inputs: { CONTENT: ANY_HTML },
     tip: 'N’importe quelle balise HTML : écris son nom et, si tu veux, ses attributs (par exemple class="important").',
     memo: 'Pour utiliser une balise qui n’a pas de bloc, avec des attributs si besoin.' });
   def({ type: 'bw_comment', cat: 'plus', shape: 'comment', tag: '!--', fr: 'note invisible',
-    kinds: ANY_HTML, text: 'Une note pour moi',
+    kinds: ANY_HTML.concat('head'), text: 'Une note pour moi',
     tip: 'Un commentaire : une note dans le code, qui ne s’affiche pas dans la page.',
     memo: 'Un commentaire <!-- ... --> : une note pour toi, invisible dans la page.' });
   def({ type: 'bw_css_rule_free', cat: 'plus', shape: 'cssrulefree', tag: 'style', fr: 'style pour',
