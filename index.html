@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BlocWeb – construis ta page web avec des blocs</title>
+  <meta name="description" content="Créer des pages web avec des blocs, en français, pour apprendre le HTML et le CSS au collège.">
+  <link rel="icon" href="img/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="vendor/codemirror/lib/codemirror.css">
+  <link rel="stylesheet" href="vendor/codemirror/addon/hint/show-hint.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="img/logo.svg" alt="" width="34" height="34">
+      <span class="brand-name">Bloc<b>Web</b></span>
+    </div>
+
+    <nav class="actions" aria-label="Projet">
+      <button type="button" id="btn-new" title="Commencer une nouvelle page"><span class="ico" aria-hidden="true">📄</span><span class="txt">Nouveau</span></button>
+      <button type="button" id="btn-models" title="Partir d'un modèle de page"><span class="ico" aria-hidden="true">✨</span><span class="txt">Modèles</span></button>
+      <button type="button" id="btn-open" title="Ouvrir un projet ou une page web"><span class="ico" aria-hidden="true">📂</span><span class="txt">Ouvrir</span></button>
+      <button type="button" id="btn-save" title="Enregistrer le projet (Ctrl+S)"><span class="ico" aria-hidden="true">💾</span><span class="txt">Enregistrer</span></button>
+      <button type="button" id="btn-export" title="Télécharger la page web, prête à être ouverte dans un navigateur"><span class="ico" aria-hidden="true">🌐</span><span class="txt">Télécharger la page</span></button>
+      <button type="button" id="btn-images" title="Les images de ton projet"><span class="ico" aria-hidden="true">🖼️</span><span class="txt">Mes images</span></button>
+    </nav>
+
+    <div class="mode-switch" role="group" aria-label="Façon de travailler">
+      <button type="button" id="mode-blocks" class="on" aria-pressed="true" title="Construire la page avec des blocs"><span aria-hidden="true">🧩</span> Blocs</button>
+      <button type="button" id="mode-code" aria-pressed="false" title="Écrire le code HTML soi-même"><span aria-hidden="true">⌨️</span> Code</button>
+    </div>
+
+    <button type="button" id="btn-help" class="help" title="Aide et mémo des balises"><span class="ico" aria-hidden="true">❓</span><span class="txt">Aide</span></button>
+  </header>
+
+  <div class="layout" id="layout">
+    <section class="pane left" id="left" aria-label="Espace de travail">
+      <div class="pane-head" id="blocks-head">
+        <div class="seg" id="labels-seg" role="radiogroup" aria-label="Ce qui est écrit sur les blocs">
+          <span class="seg-label">Étiquettes&nbsp;:</span>
+          <button type="button" role="radio" data-mode="fr" title="Les blocs sont écrits en français">Français</button>
+          <button type="button" role="radio" data-mode="both" title="Les blocs montrent le français et les balises HTML">Les deux</button>
+          <button type="button" role="radio" data-mode="tags" title="Les blocs ressemblent au vrai code HTML">Balises</button>
+        </div>
+        <div class="spacer"></div>
+        <button type="button" class="icon-btn" id="btn-undo" title="Annuler (Ctrl+Z)" aria-label="Annuler">↶</button>
+        <button type="button" class="icon-btn" id="btn-redo" title="Rétablir (Ctrl+Y)" aria-label="Rétablir">↷</button>
+        <button type="button" class="icon-btn" id="btn-tidy" title="Ranger les blocs" aria-label="Ranger les blocs">🧹</button>
+      </div>
+      <div class="pane-head" id="code-head" hidden>
+        <h2>⌨️ Ton code HTML</h2>
+        <span class="hint">Tape <code>&lt;</code> pour voir les balises.</span>
+        <div class="spacer"></div>
+        <button type="button" class="btn primary" id="btn-back-blocks">🧩 Revenir aux blocs</button>
+      </div>
+      <div class="pane-body">
+        <div id="blockly"></div>
+        <div id="editor" hidden></div>
+      </div>
+      <div class="advice" id="advice">
+        <button type="button" id="advice-toggle" aria-expanded="false" aria-controls="advice-list">
+          <span aria-hidden="true">💡</span> Conseils <span class="badge" id="advice-count">0</span>
+          <span class="chev" aria-hidden="true">▴</span>
+        </button>
+        <ul id="advice-list"></ul>
+      </div>
+    </section>
+
+    <div class="gutter v" id="gutter-v" role="separator" aria-orientation="vertical" title="Glisser pour redimensionner"></div>
+
+    <section class="pane right" id="right" aria-label="Résultat">
+      <div class="panel" id="preview-panel">
+        <div class="pane-head">
+          <h2>👀 Aperçu</h2>
+          <span class="hint" id="preview-hint">Clique sur un élément pour retrouver son bloc.</span>
+          <div class="spacer"></div>
+          <button type="button" class="btn small" id="btn-fullview" title="Voir la page dans un nouvel onglet">↗ Grand écran</button>
+        </div>
+        <div class="panel-body">
+          <iframe id="preview" title="Aperçu de la page" sandbox="allow-same-origin"></iframe>
+        </div>
+      </div>
+      <div class="gutter h" id="gutter-h" role="separator" aria-orientation="horizontal" title="Glisser pour redimensionner"></div>
+      <div class="panel" id="code-panel">
+        <div class="pane-head">
+          <h2><span class="code-ico">&lt;/&gt;</span> Code HTML</h2>
+          <span class="hint">Il s’écrit tout seul avec tes blocs.</span>
+          <div class="spacer"></div>
+          <button type="button" class="btn small" id="btn-copy" title="Copier le code">📋 Copier</button>
+        </div>
+        <div class="panel-body"><div id="code-view"></div></div>
+      </div>
+    </section>
+  </div>
+
+
+  <dialog id="dlg" aria-labelledby="dlg-title">
+    <h2 id="dlg-title"></h2>
+    <div id="dlg-body"></div>
+    <div id="dlg-buttons"></div>
+  </dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <noscript><p class="noscript">BlocWeb a besoin de JavaScript pour fonctionner.</p></noscript>
+
+  <script src="vendor/blockly/blockly_compressed.js"></script>
+  <script src="vendor/blockly/msg/fr.js"></script>
+  <script src="vendor/codemirror/lib/codemirror.js"></script>
+  <script src="vendor/codemirror/mode/xml/xml.js"></script>
+  <script src="vendor/codemirror/mode/javascript/javascript.js"></script>
+  <script src="vendor/codemirror/mode/css/css.js"></script>
+  <script src="vendor/codemirror/mode/htmlmixed/htmlmixed.js"></script>
+  <script src="vendor/codemirror/addon/fold/xml-fold.js"></script>
+  <script src="vendor/codemirror/addon/edit/closetag.js"></script>
+  <script src="vendor/codemirror/addon/edit/matchtags.js"></script>
+  <script src="vendor/codemirror/addon/selection/active-line.js"></script>
+  <script src="vendor/codemirror/addon/hint/show-hint.js"></script>
+  <script src="vendor/codemirror/addon/hint/xml-hint.js"></script>
+  <script src="vendor/codemirror/addon/hint/html-hint.js"></script>
+  <script src="js/sounds.js"></script>
+  <script src="js/catalog.js"></script>
+  <script src="js/blocks.js"></script>
+  <script src="js/generator.js"></script>
+  <script src="js/importer.js"></script>
+  <script src="js/advice.js"></script>
+  <script src="js/codecheck.js"></script>
+  <script src="js/zip.js"></script>
+  <script src="js/templates.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

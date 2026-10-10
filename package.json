@@ -1,0 +1,13 @@
+{
+  "name": "blocweb",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BlocWeb : créer des pages web avec des blocs, en français, pour apprendre le HTML et le CSS au collège.",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "test": "node tests/smoke.test.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.0"
+  }
+}
